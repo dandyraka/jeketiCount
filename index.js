@@ -1,5 +1,6 @@
 import axios from 'axios'
 import * as cheerio from 'cheerio';
+import randomString from 'randomstring'
 
 const JeketiHeaders = {
     'Host': 'jkt48.com',
@@ -21,6 +22,25 @@ const JeketiHeaders = {
 
 function numbFormat(number){
     return new Intl.NumberFormat(['id']).format(number);
+}
+
+async function login(email, pass){
+    const formData = `return_path=&login_id=${encodeURIComponent(email)}&login_password=${pass}`;
+    const CookieString = randomString.generate(26);
+    const Cookie = 'sid=' + CookieString;
+
+    const login = await axios.post('https://jkt48.com/login?lang=id', formData, {
+        headers: {
+            Cookie
+        }
+    })
+
+    if (login.data.includes('Alamat email atau Kata sandi salah')) {
+        console.log('Alamat email atau password salah')
+    } else {
+        console.log('Sukses login')
+        return CookieString;
+    }
 }
 
 const getTotalPages = async (cookie) => {
@@ -103,7 +123,10 @@ function extractAndSumValues(data) {
 }
 
 async function main() {
-    const cookie = "YOUR_COOKIE_HERE"; //sid cookie
+    //const cookie = "YOUR_COOKIE_HERE"; //sid cookie
+    const email = "YOUR_EMAIL_HERE";
+    const password = "YOUR_PASSWORD_HERE";
+    const cookie = await login(email, password);
     const allTableData = await getAllTableData(cookie);
 
     const { summary, totalBonus, totalPoints } = extractAndSumValues(allTableData);

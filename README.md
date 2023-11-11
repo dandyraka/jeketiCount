@@ -5,8 +5,8 @@ Install `npm i`
 Run `node index.js`
 
 ## Config
-1. Ambil `sid` cookie pada website `jkt48.com`  
-2. Paste pada `index.js`
+1. Isi `email` dan `password` pada `index.js`
 ```
-const cookie = "YOUR_COOKIE_HERE";
+const email = "YOUR_EMAIL_HERE";
+const password = "YOUR_PASSWORD_HERE";
 ```
