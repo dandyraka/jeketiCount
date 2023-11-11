@@ -1,6 +1,8 @@
-import axios from 'axios'
+import axios from 'axios';
 import * as cheerio from 'cheerio';
-import randomString from 'randomstring'
+import randomString from 'randomstring';
+import inquirer from 'inquirer';
+import readlineSync from 'readline-sync';
 
 const JeketiHeaders = {
     'Host': 'jkt48.com',
@@ -122,21 +124,58 @@ function extractAndSumValues(data) {
     return { summary, totalBonus, totalPoints };
 }
 
-async function main() {
-    //const cookie = "YOUR_COOKIE_HERE"; //sid cookie
-    const email = "YOUR_EMAIL_HERE";
-    const password = "YOUR_PASSWORD_HERE";
-    const cookie = await login(email, password);
-    const allTableData = await getAllTableData(cookie);
+const loginChoose = await inquirer
+    .prompt([
+        {
+            type: 'list',
+            name: 'login',
+            message: 'Mau login pakai apa?',
+            choices: ['Cookie', 'Email & Password'],
+        },
+    ])
+    .then(answers => answers.login);
 
-    const { summary, totalBonus, totalPoints } = extractAndSumValues(allTableData);
-    for (let usage in summary) {
-        console.log(`${usage} Buy: ${numbFormat(summary[usage].totalPoints)} P`);
-        console.log(`${usage} Bonus: ${numbFormat(summary[usage].totalBonus)} P\n`);
-    }
-    console.log("====================");
-    console.log("Jumlah JKT48 Points: " + numbFormat(totalPoints) + " P");
-    console.log("Bonus Points: " + numbFormat(totalBonus) + " P");
+let cookie = "";
+if(loginChoose == "Cookie"){
+    cookie = await inquirer
+        .prompt([
+            {
+                type: 'input',
+                name: 'cookie',
+                message: 'Cookie (sid):'
+            },
+        ])
+        .then(answers => answers.cookie);
+} else {
+    const email = await inquirer
+        .prompt([
+            {
+                type: 'input',
+                name: 'email',
+                message: 'Email:'
+            },
+        ])
+        .then(answers => answers.email);
+    const password = await inquirer
+        .prompt([
+            {
+                type: 'password',
+                name: 'password',
+                mask: '*',
+                message: 'Password:'
+            },
+        ])
+        .then(answers => answers.password);
+    cookie = await login(email, password);
 }
+console.log("\n");
+const allTableData = await getAllTableData(cookie);
 
-main();
+const { summary, totalBonus, totalPoints } = extractAndSumValues(allTableData);
+for (let usage in summary) {
+    console.log(`${usage} Buy: ${numbFormat(summary[usage].totalPoints)} P`);
+    console.log(`${usage} Bonus: ${numbFormat(summary[usage].totalBonus)} P\n`);
+}
+console.log("====================");
+console.log(`Jumlah JKT48 Points: ${numbFormat(totalPoints)} P`);
+console.log(`Bonus Points: ${numbFormat(totalBonus)} P`);
